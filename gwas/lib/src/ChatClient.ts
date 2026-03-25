@@ -13,10 +13,18 @@ const CHAT_API_BASE = 'https://chat.googleapis.com/v1';
 // ─── Core send ───────────────────────────────────────────────────────────────
 
 /**
+ * Strips any leading `spaces/` prefix so callers can safely pass either
+ * a raw space ID ("AAAA_bbb") or a full resource name ("spaces/AAAA_bbb").
+ */
+function _normalizeSpaceId(spaceId: string): string {
+  return spaceId.startsWith('spaces/') ? spaceId.slice('spaces/'.length) : spaceId;
+}
+
+/**
  * Posts a plain text message to a Chat space.
  */
 function sendChatMessage(spaceId: string, text: string): string {
-  return _chatPost(`spaces/${spaceId}/messages`, { text });
+  return _chatPost(`spaces/${_normalizeSpaceId(spaceId)}/messages`, { text });
 }
 
 /**
@@ -26,7 +34,7 @@ function sendChatMessage(spaceId: string, text: string): string {
 function sendChatCard(spaceId: string, card: object, fallbackText?: string): string {
   const body: Record<string, unknown> = { cardsV2: [{ cardId: generateId(), card }] };
   if (fallbackText) body.text = fallbackText;
-  return _chatPost(`spaces/${spaceId}/messages`, body);
+  return _chatPost(`spaces/${_normalizeSpaceId(spaceId)}/messages`, body);
 }
 
 /**

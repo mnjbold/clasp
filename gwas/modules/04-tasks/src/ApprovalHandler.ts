@@ -28,6 +28,14 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.HTML.HtmlOutp
     );
   }
 
+  // Verify that the caller is the intended approver.
+  const callerEmail = Session.getActiveUser().getEmail();
+  if (!callerEmail || callerEmail !== approval.assignedTo) {
+    return HtmlService.createHtmlOutput(
+      '<h2>Access denied.</h2><p>This approval is not assigned to you.</p>'
+    );
+  }
+
   if (action === 'approve') {
     _executeApprovedAction(approval);
     GWAS.updateApprovalStatus(approvalId, 'approved');
@@ -142,8 +150,9 @@ function requestTaskCreationApproval(params: {
     callbackBaseUrl: callbackUrl,
   });
 
-  // Persist the approval record with the real message ID.
+  // Persist the approval record using the same ID that was embedded in the card URL.
   GWAS.createApproval({
+    approvalId: tempApprovalId,
     actionType: 'CREATE_TASK',
     payload,
     requestedBy: 'module-03-meeting-notes',

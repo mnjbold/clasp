@@ -15,7 +15,7 @@ function createProjectWorkspace(projectId: string): void {
   const row = GWAS.findRowByValue(sheet, PROJ_COL.PROJECT_ID, projectId);
   if (row < 0) return;
 
-  const rowData = sheet.getRange(row, 1, 1, 12).getValues()[0];
+  const rowData = sheet.getRange(row, 1, 1, 13).getValues()[0];
   const project: Project = {
     projectId: rowData[0]?.toString(),
     name: rowData[1]?.toString(),
@@ -29,6 +29,7 @@ function createProjectWorkspace(projectId: string): void {
     driveFolderUrl: rowData[9]?.toString(),
     progressPct: 0,
     lastUpdated: new Date().toISOString(),
+    tasksListId: rowData[12]?.toString(),
   };
 
   // Skip if already set up (has a Drive folder URL).
@@ -42,12 +43,13 @@ function createProjectWorkspace(projectId: string): void {
 
     // 2. Create spec Doc.
     const specDocUrl = _createSpecDoc(project, folderUrl);
+    project.specDocUrl = specDocUrl;
 
-    // 3. Create Calendar milestone events.
+    // 3. Create Calendar milestone events (uses project.specDocUrl for kickoff description).
     _createMilestoneEvents(project);
 
-    // 4. Create Google Tasks list.
-    _createTasksList(project);
+    // 4. Create Google Tasks list and persist its ID.
+    _createTasksList(project, sheet, row);
 
     // 5. Update the sheet row with URLs.
     sheet.getRange(row, PROJ_COL.SPEC_DOC_URL).setValue(specDocUrl);
@@ -205,10 +207,18 @@ function _createMilestoneEvents(project: Project): void {
   GWAS.gwasLog('Projects', 'INFO', `Calendar milestones created for project ${project.projectId}.`);
 }
 
-function _createTasksList(project: Project): void {
+function _createTasksList(
+  project: Project,
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  row: number
+): void {
   try {
     const list = Tasks.Tasklists!.insert({ title: `[${project.projectId}] ${project.name}` });
     GWAS.gwasLog('Projects', 'INFO', `Tasks list created: ${list.id} for project ${project.projectId}`);
+    // Persist the list ID so future syncs can target the correct list.
+    if (list.id) {
+      sheet.getRange(row, PROJ_COL.TASKS_LIST_ID).setValue(list.id);
+    }
   } catch (e) {
     GWAS.gwasLog('Projects', 'WARN', `Tasks list creation failed: ${(e as Error).message}`);
   }

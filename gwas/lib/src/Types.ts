@@ -53,6 +53,7 @@ interface Project {
   driveFolderUrl: string;
   progressPct: number;
   lastUpdated: string;
+  tasksListId?: string;   // Google Tasks tasklist ID, set during project setup
 }
 
 // ─── Approvals ───────────────────────────────────────────────────────────────

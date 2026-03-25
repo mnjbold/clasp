@@ -17,6 +17,7 @@ const PROJ_COL = {
   DRIVE_FOLDER_URL: 10,
   PROGRESS_PCT: 11,
   LAST_UPDATED: 12,
+  TASKS_LIST_ID: 13,
 } as const;
 
 function setupProjectsSheet(): void {
@@ -28,7 +29,7 @@ function setupProjectsSheet(): void {
   const headers = [
     'Project ID', 'Name', 'Description', 'Status', 'Owner', 'Team',
     'Start Date', 'Target Date', 'Spec Doc URL', 'Drive Folder URL',
-    'Progress %', 'Last Updated',
+    'Progress %', 'Last Updated', 'Tasks List ID',
   ];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers])
     .setFontWeight('bold').setBackground('#1a73e8').setFontColor('#fff');
@@ -72,7 +73,7 @@ function getAllProjects(): Project[] {
   const sheet = ss.getSheetByName(PROJECTS_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
 
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 12).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues()
     .filter(r => r[0])
     .map(r => ({
       projectId: r[0]?.toString(),
@@ -87,6 +88,7 @@ function getAllProjects(): Project[] {
       driveFolderUrl: r[9]?.toString(),
       progressPct: Number(r[10]) || 0,
       lastUpdated: r[11]?.toString(),
+      tasksListId: r[12]?.toString(),
     }));
 }
 

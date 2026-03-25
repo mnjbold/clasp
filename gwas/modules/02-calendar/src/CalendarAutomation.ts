@@ -252,13 +252,13 @@ function _getEventColor(event: GoogleAppsScript.Calendar.CalendarEvent): string 
 // ─── Focus time blocker ───────────────────────────────────────────────────────
 
 /**
- * Blocks 2-hour focus windows for each team member based on their availability.
+ * Blocks a 2-hour focus window on the script owner's default calendar
+ * for each weekday in the coming week, based on existing availability.
  * Runs every Sunday at 7 PM for the coming week.
  */
 function blockWeeklyFocusTime(): void {
-  GWAS.gwasLog('Calendar', 'INFO', 'Blocking weekly focus time...');
+  GWAS.gwasLog('Calendar', 'INFO', 'Blocking weekly focus time on default calendar...');
   const cal = CalendarApp.getDefaultCalendar();
-  const members = GWAS.getTeamMembers();
 
   const now = new Date();
   const daysUntilMonday = (8 - now.getDay()) % 7 || 7;

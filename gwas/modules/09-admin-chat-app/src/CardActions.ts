@@ -58,15 +58,22 @@ function _handleInlineApproval(approvalId: string, action: 'approve' | 'reject',
   if (approval.status !== 'pending') return textResponse(`This approval has already been ${approval.status}.`);
   if (approval.assignedTo !== senderEmail) return textResponse('This approval is not assigned to you.');
 
-  GWAS.updateApprovalStatus(approvalId, action === 'approve' ? 'approved' : 'rejected');
-
   if (action === 'approve') {
     const payload = _safeParseJson(approval.payload);
-    if (approval.actionType === 'CREATE_TASK' && payload) {
-      _createTaskFromAgent(payload, senderEmail);
+    if (!payload) return textResponse('❌ Invalid approval payload — cannot execute action.');
+
+    if (approval.actionType === 'CREATE_TASK') {
+      const result = _createTaskFromAgent(payload, senderEmail);
+      if (!result.success) return textResponse(`❌ Action failed: ${result.message}`);
+    } else {
+      return textResponse(`❌ Unsupported approval action type: ${approval.actionType}`);
     }
+
+    // Only mark approved after the action succeeds.
+    GWAS.updateApprovalStatus(approvalId, 'approved');
     return textResponse(`✅ Approved! Action has been executed.`);
   } else {
+    GWAS.updateApprovalStatus(approvalId, 'rejected');
     return textResponse(`❌ Rejected. Action has been cancelled.`);
   }
 }

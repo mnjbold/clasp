@@ -46,8 +46,12 @@ function _getApprovalsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
 
 /**
  * Creates a new pending approval record and returns the approvalId.
+ * If `approvalId` is supplied (e.g. the same ID already embedded in a Chat
+ * card's callback URL), it is persisted as-is so that callback lookups
+ * succeed. If omitted a new ID is generated.
  */
 function createApproval(params: {
+  approvalId?: string;
   actionType: ApprovalActionType;
   payload: object;
   requestedBy: string;
@@ -55,7 +59,7 @@ function createApproval(params: {
   chatSpaceId: string;
   chatMessageId: string;
 }): string {
-  const approvalId = generateId();
+  const approvalId = params.approvalId ?? generateId();
   const now = new Date();
   const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +24h
 
