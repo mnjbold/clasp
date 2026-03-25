@@ -16,6 +16,7 @@ A fully automated, AI-augmented workspace operating system built entirely within
 | **06 Digest** | Personalized AM/PM/weekly digests via Gmail + Google Chat DM |
 | **07 Knowledge Base** | Semantic search across Drive, Gmail, Calendar, and meeting notes using Gemini embeddings |
 | **08 Reporting** | Daily/weekly/monthly reports as Docs and Slides, delivered via Chat + Gmail |
+| **09 Admin Chat App** | Native Google Chat App — AI agent, slash commands, interactive dialogs, full system control without leaving Chat |
 
 **Everything flows to Google Chat.** Every automated action (task creation, calendar event suggestion, urgent alert, digest, meeting summary) is delivered as an interactive Chat card. Task and event creation require your approval via Approve/Reject buttons before anything is written.
 
@@ -79,6 +80,8 @@ find modules -name "appsscript.json" -exec \
 
 ### Step 4 — Deploy each module
 
+> Deploy Module 09 last — it depends on all other modules being live so the agent has data to read.
+
 For each module, bind it to the appropriate Google Sheet (modules 01, 04, 05, 07) or create standalone (modules 02, 03, 06, 08):
 
 ```bash
@@ -123,6 +126,13 @@ clasp push
 cd gwas/modules/08-reporting
 clasp create --type standalone --title "GWAS Reporting"
 clasp push
+
+# Module 09 — Admin Chat App (standalone)
+cd gwas/modules/09-admin-chat-app
+clasp create --type standalone --title "GWAS Admin Chat App"
+clasp push
+# Then in Apps Script editor: Deploy → New deployment → Web app
+# Copy the Deployment ID → paste into Google Cloud Console → Chat API → Configuration
 ```
 
 ### Step 5 — Configure Script Properties
@@ -158,6 +168,34 @@ Open each module in the Apps Script editor and run these functions once:
 
 ```
 lib/index.ts          → setupLibrary()        # seeds config keys, creates Team sheet
+...
+09-admin-chat-app     → getSetupInstructions() # prints full Chat app config guide
+```
+
+### Step 6b — Configure the Chat App in Google Cloud Console
+
+1. Go to **console.cloud.google.com → APIs & Services → Google Chat API → Configuration**
+2. Set **App name**: `GWAS Assistant`
+3. **Connection settings**: Apps Script → paste the Deployment ID from Module 09
+4. Add **Slash commands** (ID must match exactly):
+
+| ID | Command | Description |
+|---|---|---|
+| 1 | `/status` | Live system dashboard |
+| 2 | `/tasks` | Your open tasks + team overdue |
+| 3 | `/projects` | Active projects status |
+| 4 | `/digest` | Trigger a digest now |
+| 5 | `/create` | Create a task or project |
+| 6 | `/search` | Search the knowledge base |
+| 7 | `/report` | Generate a report |
+| 8 | `/approve` | List pending approvals |
+| 9 | `/help` | Show all commands |
+
+5. **Publish** the app to your domain
+6. Add `@GWAS Assistant` to your team spaces
+
+```
+lib/index.ts          → setupLibrary()        # seeds config keys, creates Team sheet
 01-dashboard          → setupDashboard()       # creates all dashboard sheets + triggers
 02-calendar           → setupCalendarAutomation()
 03-meeting-notes      → setupMeetingNotes()
@@ -180,6 +218,57 @@ Open the **Team Registry spreadsheet** → **Team** sheet and fill in your team:
 **How to find Chat User IDs and DM Space IDs:**
 - User ID: In Chat, open a DM → the URL contains the user ID
 - DM Space ID: The `spaces/XXXXX` part of the DM URL
+
+---
+
+## Admin Chat App — what you can do from Chat
+
+The Chat App is a fully conversational AI agent. You never need to open a spreadsheet or script editor for day-to-day operations.
+
+### Slash commands (instant, no typing)
+
+```
+/status    → Live KPI dashboard: open tasks, overdue, active projects, at-risk, pending approvals
+/tasks     → Your open tasks grouped by overdue / due today / upcoming + team overdue summary
+/projects  → Active projects with progress %, days left, at-risk flagging
+/approve   → All pending approval cards assigned to you — approve/reject inline
+/create    → Opens a dialog to create a task or project with dropdowns and date picker
+/search    → Opens a search dialog — semantic KB search across all indexed content
+/digest    → Buttons to trigger AM, PM, or weekly digest immediately
+/report    → Buttons to generate daily, weekly, or monthly report immediately
+/help      → Full command reference + example natural language queries
+```
+
+### Natural language (just talk to it)
+
+The agent reads your message, determines intent via Gemini, and executes the right action:
+
+```
+"Show me overdue tasks for the team"
+  → /tasks card with full overdue breakdown
+
+"Create a task: update the onboarding docs, assign to Alice, due next Friday, P1"
+  → Task created immediately, confirmation card returned
+
+"What projects are at risk this week?"
+  → /projects card filtered to at-risk items with Gemini context
+
+"Search for anything about the Q4 roadmap"
+  → Semantic KB search, top 6 results with relevance scores
+
+"Trigger the PM digest"
+  → Digest triggered, team notified
+
+"How many tasks were completed this week?"
+  → Gemini answers from live spreadsheet data
+
+"Create a project: Mobile App Redesign, owner Bob, target March 31"
+  → Project row created, Drive folder + spec doc + calendar events set up automatically
+```
+
+### Approval cards (inline, no browser needed)
+
+Every automated action that needs confirmation arrives as a Chat card with **Approve / Reject** buttons. Clicking Approve executes the action immediately — no URL redirect, no browser tab.
 
 ---
 
@@ -306,7 +395,17 @@ gwas/
 │   ├── 05-projects/              # Project Management
 │   ├── 06-digest/                # Daily Digest
 │   ├── 07-knowledge-base/        # Unified Knowledge Base
-│   └── 08-reporting/             # Unified Reporting
+│   ├── 08-reporting/             # Unified Reporting
+│   └── 09-admin-chat-app/        # AI Agentic Admin Dashboard (native Chat App)
+│       ├── src/
+│       │   ├── Types.ts          # Chat event/response type definitions
+│       │   ├── ChatApp.ts        # onMessage() entry point — slash commands + NL agent
+│       │   ├── Dialogs.ts        # Modal dialog builders and submission handlers
+│       │   ├── CardActions.ts    # Interactive card button click handlers
+│       │   ├── AgentContext.ts   # Live system stats, health check, conversational fallback
+│       │   └── Setup.ts          # Cloud Console configuration guide
+│       ├── appsscript.json
+│       └── .clasp.json
 ├── tsconfig.base.json
 ├── clasp.config.json             # Module → scriptId mapping
 ├── .gitignore

@@ -9,6 +9,7 @@
     "05-projects":      { "scriptId": "", "description": "Project Management (bound to Projects spreadsheet)" },
     "06-digest":        { "scriptId": "", "description": "Daily Digest (standalone)" },
     "07-knowledge-base":{ "scriptId": "", "description": "Unified Knowledge Base (bound to KB spreadsheet)" },
-    "08-reporting":     { "scriptId": "", "description": "Unified Reporting (standalone)" }
+    "08-reporting":     { "scriptId": "", "description": "Unified Reporting (standalone)" },
+    "09-admin-chat-app":{ "scriptId": "", "description": "AI Agentic Admin Dashboard — native Google Chat App with slash commands, dialogs, and conversational Gemini agent" }
   }
 }
