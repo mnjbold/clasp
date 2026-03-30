@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_CALENDAR_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "1ed3nRX4ZVFD7IJ7nMNarTbvQ1ymEeHF6sL_pIOPb7iNhLta7Mi5xZMdc",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

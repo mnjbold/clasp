@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_TASKS_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "16djnGsv5Q2jOHEqq68-9H5aLpqEtQoC0p-OJmIrUHNkmDIx7g3jQ691N",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

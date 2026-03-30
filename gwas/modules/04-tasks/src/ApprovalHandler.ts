@@ -10,6 +10,9 @@
  */
 
 function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.HTML.HtmlOutput {
+  if (!e || !e.parameter) {
+    return HtmlService.createHtmlOutput('<h2>This page must be accessed via an approval link.</h2>');
+  }
   const approvalId = e.parameter['approvalId'];
   const action = e.parameter['action'] as 'approve' | 'reject';
 

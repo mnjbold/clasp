@@ -4,9 +4,9 @@
     "libraries": [
       {
         "userSymbol": "GWAS",
-        "scriptId": "REPLACE_WITH_LIB_SCRIPT_ID",
+        "libraryId": "1lqCse5yiXgmC3T05YfYCaHgkpRoo5zLepeTRrMwlek2L7ILgrMaLNBP0",
         "version": "1",
-        "developmentMode": false
+        "developmentMode": true
       }
     ]
   },

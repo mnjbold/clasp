@@ -34,7 +34,9 @@ function setupTaskTracker(): void {
   _setupTaskTriggers();
 
   GWAS.gwasLog('Tasks', 'INFO', 'Task Tracker setup complete.');
-  SpreadsheetApp.getUi().alert('✅ Task Tracker setup complete!');
+  try {
+    SpreadsheetApp.getUi().alert('✅ Task Tracker setup complete!');
+  } catch (_) { /* not running in spreadsheet UI context */ }
 }
 
 function _createTasksSheet(ss: GoogleAppsScript.Spreadsheet.Spreadsheet): void {

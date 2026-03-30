@@ -1,0 +1,17 @@
+{
+  "name": "gwas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Google Workspace Automation System — build tooling",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "build:lib": "node tools/build.mjs lib",
+    "create-modules": "node tools/create-module-scripts.mjs",
+    "preflight": "node tools/preflight.mjs"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.83",
+    "typescript": "^5.4.5"
+  }
+}

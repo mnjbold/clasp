@@ -8,6 +8,9 @@ yarn-error.log*
 .venv*
 .nyc_output
 *.lock
+secrets/
+*.apps.googleusercontent.com.json
+*service-account*.json
 
 build
 coverage

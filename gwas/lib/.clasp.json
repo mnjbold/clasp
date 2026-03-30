@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_LIB_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "1lqCse5yiXgmC3T05YfYCaHgkpRoo5zLepeTRrMwlek2L7ILgrMaLNBP0",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

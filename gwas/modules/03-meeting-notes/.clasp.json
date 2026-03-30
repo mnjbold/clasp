@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_MEETING_NOTES_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "1SBFCUAp1lt2pRlnGMk5Bc9vm6fbB3xd0K5BkNx--4g1zBKzbmKXLowKU",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

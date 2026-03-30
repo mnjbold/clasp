@@ -171,10 +171,10 @@ Determine the user's intent and respond with a JSON object:
     case 'create_task': {
       if (parameters.title) {
         const result = _createTaskFromAgent(parameters, senderEmail);
-        return cardResponse([{
-          header: { title: result.success ? '✅ Task Created' : '❌ Task Creation Failed' },
-          sections: [{ widgets: [{ textParagraph: { text: result.message } }] }],
-        }]);
+        return cardResponse(
+          [{ widgets: [{ textParagraph: { text: result.message } }] }],
+          { title: result.success ? '✅ Task Created' : '❌ Task Creation Failed' },
+        );
       }
       // Not enough info — open dialog.
       return buildCreateDialog(event, 'task', parameters);
@@ -183,10 +183,10 @@ Determine the user's intent and respond with a JSON object:
     case 'create_project': {
       if (parameters.name && parameters.description) {
         const result = _createProjectFromAgent(parameters, senderEmail);
-        return cardResponse([{
-          header: { title: result.success ? '✅ Project Created' : '❌ Project Creation Failed' },
-          sections: [{ widgets: [{ textParagraph: { text: result.message } }] }],
-        }]);
+        return cardResponse(
+          [{ widgets: [{ textParagraph: { text: result.message } }] }],
+          { title: result.success ? '✅ Project Created' : '❌ Project Creation Failed' },
+        );
       }
       return buildCreateDialog(event, 'project', parameters);
     }
@@ -490,36 +490,30 @@ function buildApprovalsCard(senderEmail: string, preamble?: string): ChatRespons
 
 function buildDigestTriggerCard(senderEmail: string): ChatResponse {
   return cardResponse([{
-    header: { title: '📬 Trigger Digest', subtitle: 'Send a digest now' },
-    sections: [{
-      widgets: [{
-        buttonList: {
-          buttons: [
-            { text: '☀️ AM Digest', onClick: { action: { function: 'onTriggerDigest', parameters: [{ key: 'type', value: 'am' }, { key: 'email', value: senderEmail }] } } },
-            { text: '🌙 PM Digest', onClick: { action: { function: 'onTriggerDigest', parameters: [{ key: 'type', value: 'pm' }, { key: 'email', value: senderEmail }] } } },
-            { text: '📊 Weekly', onClick: { action: { function: 'onTriggerDigest', parameters: [{ key: 'type', value: 'weekly' }, { key: 'email', value: senderEmail }] } } },
-          ],
-        },
-      }],
+    widgets: [{
+      buttonList: {
+        buttons: [
+          { text: '☀️ AM Digest', onClick: { action: { function: 'onTriggerDigest', parameters: [{ key: 'type', value: 'am' }, { key: 'email', value: senderEmail }] } } },
+          { text: '🌙 PM Digest', onClick: { action: { function: 'onTriggerDigest', parameters: [{ key: 'type', value: 'pm' }, { key: 'email', value: senderEmail }] } } },
+          { text: '📊 Weekly', onClick: { action: { function: 'onTriggerDigest', parameters: [{ key: 'type', value: 'weekly' }, { key: 'email', value: senderEmail }] } } },
+        ],
+      },
     }],
-  }]);
+  }], { title: '📬 Trigger Digest', subtitle: 'Send a digest now' });
 }
 
 function buildReportCard(senderEmail: string): ChatResponse {
   return cardResponse([{
-    header: { title: '📊 Generate Report', subtitle: 'Choose report type' },
-    sections: [{
-      widgets: [{
-        buttonList: {
-          buttons: [
-            { text: '📅 Daily', onClick: { action: { function: 'onGenerateReport', parameters: [{ key: 'type', value: 'daily' }, { key: 'email', value: senderEmail }] } } },
-            { text: '📋 Weekly', onClick: { action: { function: 'onGenerateReport', parameters: [{ key: 'type', value: 'weekly' }, { key: 'email', value: senderEmail }] } } },
-            { text: '📊 Monthly', onClick: { action: { function: 'onGenerateReport', parameters: [{ key: 'type', value: 'monthly' }, { key: 'email', value: senderEmail }] } } },
-          ],
-        },
-      }],
+    widgets: [{
+      buttonList: {
+        buttons: [
+          { text: '📅 Daily', onClick: { action: { function: 'onGenerateReport', parameters: [{ key: 'type', value: 'daily' }, { key: 'email', value: senderEmail }] } } },
+          { text: '📋 Weekly', onClick: { action: { function: 'onGenerateReport', parameters: [{ key: 'type', value: 'weekly' }, { key: 'email', value: senderEmail }] } } },
+          { text: '📊 Monthly', onClick: { action: { function: 'onGenerateReport', parameters: [{ key: 'type', value: 'monthly' }, { key: 'email', value: senderEmail }] } } },
+        ],
+      },
     }],
-  }]);
+  }], { title: '📊 Generate Report', subtitle: 'Choose report type' });
 }
 
 function buildKbSearchResults(query: string, preamble?: string): ChatResponse {
@@ -572,60 +566,54 @@ function buildKbSearchResults(query: string, preamble?: string): ChatResponse {
 }
 
 function buildHelpCard(): ChatResponse {
-  return cardResponse([{
-    header: { title: '🤖 GWAS Admin Assistant', subtitle: 'Your AI workspace command center' },
-    sections: [
-      {
-        header: 'Slash Commands',
-        widgets: [
-          { decoratedText: { topLabel: '/status', text: 'Live system dashboard — KPIs, health, at-risk projects' } },
-          { decoratedText: { topLabel: '/tasks', text: 'Your open tasks + team overdue summary' } },
-          { decoratedText: { topLabel: '/projects', text: 'Active projects status + at-risk alerts' } },
-          { decoratedText: { topLabel: '/approve', text: 'List and act on pending approvals' } },
-          { decoratedText: { topLabel: '/create', text: 'Create a task or project via dialog' } },
-          { decoratedText: { topLabel: '/search [query]', text: 'Semantic search across the knowledge base' } },
-          { decoratedText: { topLabel: '/digest', text: 'Trigger AM, PM, or weekly digest now' } },
-          { decoratedText: { topLabel: '/report', text: 'Generate daily, weekly, or monthly report' } },
-        ],
-      },
-      {
-        header: 'Natural Language',
-        widgets: [{
-          textParagraph: {
-            text: 'Just talk to me naturally:\n• "Show me overdue tasks for Alice"\n• "Create a task: update API docs, owner Bob, due Friday"\n• "What projects are at risk?"\n• "Search for meeting notes about Q4 planning"\n• "Trigger the PM digest"\n• "How many tasks were completed this week?"',
-          },
-        }],
-      },
-      {
-        widgets: [{
-          buttonList: {
-            buttons: [
-              { text: '📊 Dashboard', onClick: { openLink: { url: `https://docs.google.com/spreadsheets/d/${GWAS.getConfig('DASHBOARD_SPREADSHEET_ID')}` } } },
-            ],
-          },
-        }],
-      },
-    ],
-  }]);
+  return cardResponse([
+    {
+      header: 'Slash Commands',
+      widgets: [
+        { decoratedText: { topLabel: '/status', text: 'Live system dashboard — KPIs, health, at-risk projects' } },
+        { decoratedText: { topLabel: '/tasks', text: 'Your open tasks + team overdue summary' } },
+        { decoratedText: { topLabel: '/projects', text: 'Active projects status + at-risk alerts' } },
+        { decoratedText: { topLabel: '/approve', text: 'List and act on pending approvals' } },
+        { decoratedText: { topLabel: '/create', text: 'Create a task or project via dialog' } },
+        { decoratedText: { topLabel: '/search [query]', text: 'Semantic search across the knowledge base' } },
+        { decoratedText: { topLabel: '/digest', text: 'Trigger AM, PM, or weekly digest now' } },
+        { decoratedText: { topLabel: '/report', text: 'Generate daily, weekly, or monthly report' } },
+      ],
+    },
+    {
+      header: 'Natural Language',
+      widgets: [{
+        textParagraph: {
+          text: 'Just talk to me naturally:\n\u2022 "Show me overdue tasks for Alice"\n\u2022 "Create a task: update API docs, owner Bob, due Friday"\n\u2022 "What projects are at risk?"\n\u2022 "Search for meeting notes about Q4 planning"\n\u2022 "Trigger the PM digest"\n\u2022 "How many tasks were completed this week?"',
+        },
+      }],
+    },
+    {
+      widgets: [{
+        buttonList: {
+          buttons: [
+            { text: '📊 Dashboard', onClick: { openLink: { url: `https://docs.google.com/spreadsheets/d/${GWAS.getConfig('DASHBOARD_SPREADSHEET_ID')}` } } },
+          ],
+        },
+      }],
+    },
+  ], { title: '🤖 GWAS Admin Assistant', subtitle: 'Your AI workspace command center' });
 }
 
 function buildWelcomeResponse(event: ChatEvent): ChatResponse {
   const spaceName = event.space?.displayName ?? 'this space';
   return cardResponse([{
-    header: { title: '👋 GWAS is here!', subtitle: `Connected to ${spaceName}` },
-    sections: [{
-      widgets: [{
-        textParagraph: {
-          text: 'I\'m your AI workspace assistant. I can manage tasks, projects, approvals, digests, reports, and your knowledge base — all from Chat.\n\nType `/help` to see everything I can do, or just ask me anything naturally.',
-        },
-      }, {
-        buttonList: {
-          buttons: [
-            { text: '📊 /status', onClick: { action: { function: 'onQuickAction', parameters: [{ key: 'action', value: 'status' }, { key: 'email', value: event.user?.email ?? '' }] } } },
-            { text: '❓ /help', onClick: { action: { function: 'onQuickAction', parameters: [{ key: 'action', value: 'help' }, { key: 'email', value: event.user?.email ?? '' }] } } },
-          ],
-        },
-      }],
+    widgets: [{
+      textParagraph: {
+        text: 'I\'m your AI workspace assistant. I can manage tasks, projects, approvals, digests, reports, and your knowledge base — all from Chat.\n\nType `/help` to see everything I can do, or just ask me anything naturally.',
+      },
+    }, {
+      buttonList: {
+        buttons: [
+          { text: '📊 /status', onClick: { action: { function: 'onQuickAction', parameters: [{ key: 'action', value: 'status' }, { key: 'email', value: event.user?.email ?? '' }] } } },
+          { text: '❓ /help', onClick: { action: { function: 'onQuickAction', parameters: [{ key: 'action', value: 'help' }, { key: 'email', value: event.user?.email ?? '' }] } } },
+        ],
+      },
     }],
-  }]);
+  }], { title: '👋 GWAS is here!', subtitle: `Connected to ${spaceName}` });
 }

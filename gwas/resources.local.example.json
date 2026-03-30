@@ -1,0 +1,38 @@
+{
+  "workspace": {
+    "teamRegistrySpreadsheetId": "1CTOaK7Kt2s6nF4ljVNejDC_LKkNjCqZQum2zQCTAU5U",
+    "dashboardSpreadsheetId": "1UoY81SPitbN7y2yYuP5g5cy6bJS1xltfU2PAXMiTwgI",
+    "tasksSpreadsheetId": "12Y7EoiSgTa-G8MUHIWwvTf2ZnBGI7sjaYRcVIdsnAL4",
+    "projectsSpreadsheetId": "1e8fwRlrh8VaHvZruuzArB5HY77vG_uss8u6M4mpTJT8",
+    "kbSpreadsheetId": "1wEceEo7zaEzf7kvKUuUlGLHtmXfeZKOVBacMy5jKE40",
+    "logSpreadsheetId": "1zJaUAn5ahpr4-lMfBUrzNM4jlOtdD8uzrDK7NHQYbZQ",
+    "teamDriveFolderId": "1SXJKH0RZF-wgKCKgh4yg7rluZP-5gQLz",
+    "projectsDriveFolderId": "19DQUYItP1LHSIxe6e3JmQNxfgB60DkPS",
+    "teamChatSpaceId": "AAQAN9ONUtA",
+    "approvalsChatSpaceId": "AAQAsgmMlkc"
+  },
+  "deployment": {
+    "libraryScriptId": "",
+    "libraryVersion": "1",
+    "module03ApprovalCallbackUrl": "",
+    "module03MonitoredChatSpaceIds": [],
+    "module09DeploymentId": ""
+  },
+  "scripts": {
+    "lib": "",
+    "01-dashboard": "",
+    "02-calendar": "",
+    "03-meeting-notes": "",
+    "04-tasks": "",
+    "05-projects": "",
+    "06-digest": "",
+    "07-knowledge-base": "",
+    "08-reporting": "",
+    "09-admin-chat-app": ""
+  },
+  "notes": {
+    "geminiApiKey": "Set in Script Properties only. Do not store the key in this file.",
+    "chatSpaceFormat": "TEAM_CHAT_SPACE_ID and APPROVALS_CHAT_SPACE_ID are stored without the spaces/ prefix.",
+    "module03MonitoredChatSpaceIdsFormat": "Use full values like spaces/AAA, spaces/BBB when you populate this list."
+  }
+}

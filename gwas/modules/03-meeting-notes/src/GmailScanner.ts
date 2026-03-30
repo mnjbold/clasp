@@ -199,13 +199,4 @@ function _saveGmailProcessedIds(ids: Set<string>): void {
   PropertiesService.getScriptProperties().setProperty(GMAIL_PROCESSED_KEY, JSON.stringify(arr));
 }
 
-function _resolveOwnerEmailFromName(nameOrEmail: string): string {
-  if (!nameOrEmail) return '';
-  if (nameOrEmail.includes('@')) return nameOrEmail;
-  const members = GWAS.getTeamMembers();
-  const match = members.find(m =>
-    m.name.toLowerCase().includes(nameOrEmail.toLowerCase()) ||
-    nameOrEmail.toLowerCase().includes(m.name.toLowerCase().split(' ')[0])
-  );
-  return match?.email ?? '';
-}
+// _resolveOwnerEmailFromName is defined in ChatScanner.ts (same GAS global scope).

@@ -224,7 +224,7 @@ function onCalendarEventUpdated(): void {
   });
 }
 
-function _getEventColor(event: GoogleAppsScript.Calendar.CalendarEvent): string | null {
+function _getEventColor(event: GoogleAppsScript.Calendar.CalendarEvent): GoogleAppsScript.Calendar.EventColor | string | null {
   const title = event.getTitle().toLowerCase();
   const guestCount = event.getGuestList().length;
 

@@ -26,7 +26,9 @@ function setupKnowledgeBase(): void {
   _ensureKbSheet(ss);
   _setupKbTriggers();
   GWAS.gwasLog('KB', 'INFO', 'Knowledge Base setup complete.');
-  SpreadsheetApp.getUi().alert('✅ Knowledge Base setup complete!');
+  try {
+    SpreadsheetApp.getUi().alert('✅ Knowledge Base setup complete!');
+  } catch (_) { /* not running in spreadsheet UI context */ }
 }
 
 function _ensureKbSheet(ss: GoogleAppsScript.Spreadsheet.Spreadsheet): GoogleAppsScript.Spreadsheet.Sheet {

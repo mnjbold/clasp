@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_DASHBOARD_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "1IwbdNlDiIzFr-FNCGBdU7Q6gIk4VBWH1aH8wpD2dtMHvQ6eU5g41vPC9",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_KB_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "1CfauDvnHdmHPMfBqvpLbnanQCiDfmLK7TqlKVop22uGqJ628x4HCPQTi",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

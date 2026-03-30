@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_DIGEST_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "1r4bcxdcfYnMALQiWZTQXDAIxEnVbiO0Uv-dxEPZ-L-IxKBjbOdYZ1JBO",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

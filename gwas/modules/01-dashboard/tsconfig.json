@@ -4,5 +4,6 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "files": ["../../types/gwas-globals.d.ts"]
 }

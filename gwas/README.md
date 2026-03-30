@@ -40,18 +40,32 @@ Deploy in this exact order — each module depends on the library being availabl
 
 Create these manually in Google Workspace before deploying any scripts:
 
-| Resource | Purpose | Note |
+| Resource | Purpose | ID |
 |---|---|---|
-| Google Sheet | Team Registry | Note the spreadsheet ID |
-| Google Sheet | Master Dashboard | Note the spreadsheet ID |
-| Google Sheet | Task Tracker | Note the spreadsheet ID |
-| Google Sheet | Projects | Note the spreadsheet ID |
-| Google Sheet | Knowledge Base | Note the spreadsheet ID |
-| Google Sheet | System Log | Note the spreadsheet ID |
-| Shared Drive folder | Team Drive root | Note the folder ID |
-| Shared Drive folder | `Projects/` inside Team Drive | Note the folder ID |
-| Google Chat space | Main team space | Note the space ID (`spaces/XXXXX`) |
-| Google Chat space | Approvals space (optional) | Can reuse team space |
+| Google Sheet | Team Registry | `1CTOaK7Kt2s6nF4ljVNejDC_LKkNjCqZQum2zQCTAU5U` |
+| Google Sheet | Master Dashboard | `1UoY81SPitbN7y2yYuP5g5cy6bJS1xltfU2PAXMiTwgI` |
+| Google Sheet | Task Tracker | `12Y7EoiSgTa-G8MUHIWwvTf2ZnBGI7sjaYRcVIdsnAL4` |
+| Google Sheet | Projects | `1e8fwRlrh8VaHvZruuzArB5HY77vG_uss8u6M4mpTJT8` |
+| Google Sheet | Knowledge Base | `1wEceEo7zaEzf7kvKUuUlGLHtmXfeZKOVBacMy5jKE40` |
+| Google Sheet | System Log | `1zJaUAn5ahpr4-lMfBUrzNM4jlOtdD8uzrDK7NHQYbZQ` |
+| Shared Drive folder | Team Drive root | `1SXJKH0RZF-wgKCKgh4yg7rluZP-5gQLz` |
+| Shared Drive folder | Projects subfolder | `19DQUYItP1LHSIxe6e3JmQNxfgB60DkPS` |
+| Google Chat space | Main team space | `AAQAN9ONUtA` |
+| Google Chat space | Approvals space | `AAQAsgmMlkc` |
+
+Before deploying anything, create a local deployment checklist file and run the preflight validator:
+
+```powershell
+Copy-Item .\gwas\resources.local.example.json .\gwas\resources.local.json
+node .\gwas\tools\preflight.mjs
+```
+
+Use the supporting runbooks during rollout:
+- `gwas/docs/deployment-matrix.md`
+- `gwas/docs/resource-checklist.md`
+- `gwas/docs/smoke-and-rollback.md`
+
+Important deployment note: the current GWAS source tree is written as raw TypeScript under `src/`. `clasp push` will upload those files directly, and the current codebase contains TypeScript-only syntax that Apps Script cannot execute unchanged. Before full rollout, add a transpile or bundling step that emits Apps Script-compatible JavaScript, or refactor the source to deployment-safe JavaScript.
 
 ### Step 2 — Deploy the shared library
 
@@ -72,10 +86,17 @@ In the Apps Script editor for the library:
 
 Replace `REPLACE_WITH_LIB_SCRIPT_ID` in every module's `appsscript.json` with the Library Script ID from Step 2.
 
-```bash
-# Quick replace (run from gwas/ directory):
-find modules -name "appsscript.json" -exec \
-  sed -i 's/REPLACE_WITH_LIB_SCRIPT_ID/YOUR_ACTUAL_LIB_SCRIPT_ID/g' {} \;
+```powershell
+# PowerShell (run from repository root)
+$libId = "YOUR_ACTUAL_LIB_SCRIPT_ID"
+Get-ChildItem .\gwas\modules -Recurse -Filter appsscript.json |
+  ForEach-Object {
+    $content = Get-Content $_.FullName -Raw
+    $content = $content.Replace('REPLACE_WITH_LIB_SCRIPT_ID', $libId)
+    Set-Content -Path $_.FullName -Value $content -NoNewline
+  }
+
+node .\gwas\tools\preflight.mjs
 ```
 
 ### Step 4 — Deploy each module
@@ -337,11 +358,13 @@ clasp push
 ```
 
 To update the shared library and bump the version:
-```bash
-cd gwas/lib
+```powershell
+Set-Location .\gwas\lib
 clasp push
-# In Apps Script editor: Deploy → Manage deployments → New version
-# Update version number in all modules' appsscript.json
+# In Apps Script editor: Deploy -> Manage deployments -> New version
+# Update version number in all modules' appsscript.json, then rerun:
+Set-Location ..\..
+node .\gwas\tools\preflight.mjs
 ```
 
 ---

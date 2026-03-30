@@ -177,12 +177,12 @@ function textResponse(text: string): ChatResponse {
   return { text };
 }
 
-function cardResponse(sections: object[]): ChatResponse {
+function cardResponse(sections: object[], header?: { title: string; subtitle?: string }): ChatResponse {
   return {
     actionResponse: { type: 'NEW_MESSAGE' },
     cardsV2: [{
       cardId: GWAS.generateId(),
-      card: { sections },
+      card: { ...(header ? { header } : {}), sections },
     }],
   };
 }

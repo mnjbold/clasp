@@ -22,13 +22,15 @@ function showSidebar(): void {
 }
 
 function runHealthCheck(): void {
-  const audit = GWAS.auditConfig();
-  const missing = Object.entries(audit).filter(([, v]) => !v).map(([k]) => k);
-  const members = GWAS.getTeamMembers();
+  const status = getDashboardSystemStatus();
+  const missing = Object.entries(status.config).filter(([, v]) => !v).map(([k]) => k);
 
-  let msg = `✅ Config keys set: ${Object.values(audit).filter(Boolean).length}/${Object.keys(audit).length}\n`;
+  let msg = `✅ Config keys set: ${Object.values(status.config).filter(Boolean).length}/${Object.keys(status.config).length}\n`;
   if (missing.length > 0) msg += `❌ Missing keys:\n${missing.join('\n')}\n`;
-  msg += `\n👥 Team members loaded: ${members.length}`;
+  msg += `\n👥 Team members loaded: ${status.teamSize}`;
+  msg += `\n📋 Tasks store: ${status.tasks.exists ? `${status.tasks.rows} row(s)` : 'missing'}`;
+  msg += `\n🚀 Projects store: ${status.projects.exists ? `${status.projects.rows} row(s)` : 'missing'}`;
+  msg += `\n📬 Digest log: ${status.digestLog.exists ? `${status.digestLog.rows} row(s)` : 'missing'}`;
 
   SpreadsheetApp.getUi().alert('GWAS Health Check', msg, SpreadsheetApp.getUi().ButtonSet.OK);
 }
@@ -191,14 +193,12 @@ function _getCreateProjectHtml(): string {
 // Stubs — actual logic lives in the respective modules but these are called
 // from the dashboard sidebar via google.script.run.
 function createTaskFromDashboard(params: { title: string; description: string; owner: string; priority: string; dueDate: string }): void {
-  const tasksSs = SpreadsheetApp.openById(GWAS.getConfig('TASKS_SPREADSHEET_ID'));
-  const sheet = tasksSs.getSheetByName('Tasks');
-  if (!sheet) throw new Error('Tasks sheet not found.');
+  const sheet = _ensureDashboardTasksSheet();
 
   const taskId = GWAS.generateId();
   sheet.appendRow([
     taskId, params.title, params.description, params.owner, '',
-    'todo', params.priority, params.dueDate, new Date().toISOString(), 'manual', '',
+    'todo', params.priority, params.dueDate, new Date().toISOString(), 'manual', '', '', '',
   ]);
   GWAS.gwasLog('Dashboard', 'INFO', `Task created from dashboard: ${taskId} — ${params.title}`);
 }
@@ -206,25 +206,13 @@ function createTaskFromDashboard(params: { title: string; description: string; o
 function createProjectFromDashboard(params: { name: string; description: string; owner: string; targetDate: string }): void {
   // Delegates to Module 05 logic by writing to the Projects spreadsheet.
   // Module 05's onChange trigger will pick it up and complete the setup.
-  const projectsSs = SpreadsheetApp.openById(GWAS.getConfig('PROJECTS_SPREADSHEET_ID'));
-  const sheet = projectsSs.getSheetByName('Projects');
-  if (!sheet) throw new Error('Projects sheet not found.');
+  const sheet = _ensureDashboardProjectsSheet();
 
   const projectId = GWAS.generateId();
   sheet.appendRow([
     projectId, params.name, params.description, 'planning',
     params.owner, '', GWAS.todayIso(), params.targetDate,
-    '', '', 0, new Date().toISOString(),
+    '', '', 0, new Date().toISOString(), '',
   ]);
   GWAS.gwasLog('Dashboard', 'INFO', `Project created from dashboard: ${projectId} — ${params.name}`);
-}
-
-// Stubs for digest triggers (actual logic in Module 06).
-function triggerAmDigest(): void {
-  GWAS.gwasLog('Dashboard', 'INFO', 'AM digest manually triggered from dashboard.');
-  SpreadsheetApp.getUi().alert('AM Digest trigger sent. Check Module 06 logs for delivery status.');
-}
-function triggerPmDigest(): void {
-  GWAS.gwasLog('Dashboard', 'INFO', 'PM digest manually triggered from dashboard.');
-  SpreadsheetApp.getUi().alert('PM Digest trigger sent. Check Module 06 logs for delivery status.');
 }

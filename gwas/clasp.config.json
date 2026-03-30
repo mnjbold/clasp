@@ -1,7 +1,7 @@
 {
   "_comment": "Map each module to its Apps Script scriptId after running 'clasp create' in each directory.",
   "modules": {
-    "lib":              { "scriptId": "", "description": "Shared library — deploy first, copy Library ID into each module's appsscript.json" },
+    "lib":              { "scriptId": "1lqCse5yiXgmC3T05YfYCaHgkpRoo5zLepeTRrMwlek2L7ILgrMaLNBP0", "description": "Shared library — deploy first, copy Library ID into each module's appsscript.json" },
     "01-dashboard":     { "scriptId": "", "description": "Master Dashboard (bound to a Google Sheet)" },
     "02-calendar":      { "scriptId": "", "description": "Calendar & Meeting Automation (standalone)" },
     "03-meeting-notes": { "scriptId": "", "description": "Meeting Notes + Context Extraction (standalone)" },

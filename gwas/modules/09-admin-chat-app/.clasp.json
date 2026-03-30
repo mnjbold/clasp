@@ -1,4 +1,13 @@
 {
-  "scriptId": "REPLACE_WITH_ADMIN_CHAT_APP_SCRIPT_ID",
-  "rootDir": "src"
+  "scriptId": "10_WjlK1cPqxmzz-i7iwwYw3aky8uDJvQhk3ahGazMaACs-Lne-buX09r",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

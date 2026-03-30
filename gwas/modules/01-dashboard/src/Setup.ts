@@ -33,7 +33,9 @@ function setupDashboard(): void {
   _setupTriggers();
 
   GWAS.gwasLog('Dashboard', 'INFO', 'Dashboard setup complete.');
-  SpreadsheetApp.getUi().alert('✅ GWAS Dashboard setup complete!\n\nNext steps:\n1. Fill in Script Properties (Extensions → Apps Script → Project Settings)\n2. Add team members to the Team Registry spreadsheet\n3. Run refreshDashboard() to populate data');
+  try {
+    SpreadsheetApp.getUi().alert('✅ GWAS Dashboard setup complete!\n\nNext steps:\n1. Fill in Script Properties (Extensions → Apps Script → Project Settings)\n2. Add team members to the Team Registry spreadsheet\n3. Run refreshDashboard() to populate data');
+  } catch (_) { /* not running in spreadsheet UI context */ }
 }
 
 function _setupOverviewSheet(ss: GoogleAppsScript.Spreadsheet.Spreadsheet): void {
@@ -171,7 +173,7 @@ function _setupSystemLogSheet(ss: GoogleAppsScript.Spreadsheet.Spreadsheet): voi
   const headers = ['Timestamp', 'Module', 'Level', 'Message'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold').setBackground('#1a73e8').setFontColor('#fff');
   sheet.setFrozenRows(1);
-  sheet.setColumnWidths(1, 4, [180, 140, 80, 500]);
+  [180, 140, 80, 500].forEach((w, i) => sheet.setColumnWidth(i + 1, w));
 }
 
 function _setupTriggers(): void {
