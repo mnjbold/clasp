@@ -255,29 +255,35 @@ function _dispatchTaskApprovals(
       sourceRef,
     };
 
-    const msgName = GWAS.sendApprovalCard({
-      member: approver,
-      approvalId,
-      actionType: 'CREATE_TASK',
-      title: `New task from meeting: ${item.title}`,
-      summary: item.description || item.sourceText,
-      details: [
-        { label: 'Meeting', value: event.getTitle() },
-        { label: 'Suggested Owner', value: item.suggestedOwner || 'Unassigned' },
-        { label: 'Priority', value: item.priority },
-        { label: 'Due Date', value: item.suggestedDueDate || 'Not specified' },
-        { label: 'From transcript', value: item.sourceText.substring(0, 120) + (item.sourceText.length > 120 ? '…' : '') },
-      ],
-      callbackBaseUrl: callbackUrl,
-    });
+    let msgName = '';
+    try {
+      msgName = GWAS.sendApprovalCard({
+        member: approver,
+        approvalId,
+        actionType: 'CREATE_TASK',
+        title: `New task from meeting: ${item.title}`,
+        summary: item.description || item.sourceText,
+        details: [
+          { label: 'Meeting', value: event.getTitle() },
+          { label: 'Suggested Owner', value: item.suggestedOwner || 'Unassigned' },
+          { label: 'Priority', value: item.priority },
+          { label: 'Due Date', value: item.suggestedDueDate || 'Not specified' },
+          { label: 'From transcript', value: item.sourceText.substring(0, 120) + (item.sourceText.length > 120 ? '…' : '') },
+        ],
+        callbackBaseUrl: callbackUrl,
+      });
+    } catch (e) {
+      GWAS.gwasLog('MeetingNotes', 'WARN', `Task approval card failed for ${approverEmail}: ${(e as Error).message}`);
+    }
 
-    GWAS.createApproval({
-      actionType: 'CREATE_TASK',
-      payload,
-      requestedBy: 'module-03-meeting-notes',
-      assignedTo: approverEmail,
-      chatSpaceId: approver.chatDmSpaceId,
-      chatMessageId: msgName,
+    _autoCreateTaskRecord({
+      title: item.title,
+      description: item.description,
+      owner: ownerEmail,
+      priority: item.priority,
+      dueDate: item.suggestedDueDate,
+      source: 'meeting',
+      sourceRef,
     });
   });
 }
@@ -298,29 +304,27 @@ function _dispatchCalendarApprovals(
     const callbackUrl = GWAS.getConfigOptional('APPROVAL_CALLBACK_URL') ?? '';
     const approvalId = GWAS.generateId();
 
-    const msgName = GWAS.sendApprovalCard({
-      member: approver,
-      approvalId,
-      actionType: 'CREATE_CALENDAR_EVENT',
-      title: `Schedule meeting: ${suggestion.title}`,
-      summary: suggestion.description || 'Suggested from meeting discussion.',
-      details: [
-        { label: 'Suggested Date', value: suggestion.suggestedDate || 'Not specified' },
-        { label: 'Duration', value: `${suggestion.suggestedDuration} min` },
-        { label: 'Attendees', value: suggestion.suggestedAttendees.join(', ') || 'TBD' },
-        { label: 'From', value: `"${event.getTitle()}"` },
-      ],
-      callbackBaseUrl: callbackUrl,
-    });
+    let msgName = '';
+    try {
+      msgName = GWAS.sendApprovalCard({
+        member: approver,
+        approvalId,
+        actionType: 'CREATE_CALENDAR_EVENT',
+        title: `Schedule meeting: ${suggestion.title}`,
+        summary: suggestion.description || 'Suggested from meeting discussion.',
+        details: [
+          { label: 'Suggested Date', value: suggestion.suggestedDate || 'Not specified' },
+          { label: 'Duration', value: `${suggestion.suggestedDuration} min` },
+          { label: 'Attendees', value: suggestion.suggestedAttendees.join(', ') || 'TBD' },
+          { label: 'From', value: `"${event.getTitle()}"` },
+        ],
+        callbackBaseUrl: callbackUrl,
+      });
+    } catch (e) {
+      GWAS.gwasLog('MeetingNotes', 'WARN', `Calendar approval card failed for ${organizer}: ${(e as Error).message}`);
+    }
 
-    GWAS.createApproval({
-      actionType: 'CREATE_CALENDAR_EVENT',
-      payload: suggestion,
-      requestedBy: 'module-03-meeting-notes',
-      assignedTo: organizer,
-      chatSpaceId: approver.chatDmSpaceId,
-      chatMessageId: msgName,
-    });
+    _autoCreateCalendarRecord(suggestion, organizer);
   });
 }
 
@@ -366,7 +370,12 @@ function _postMeetingSummaryToChat(
     ],
   };
 
-  GWAS.sendChatCard(teamSpaceId, card, `📝 Meeting summary: ${event.getTitle()}`);
+  try {
+    const teamSpaceId = GWAS.getConfig('TEAM_CHAT_SPACE_ID');
+    GWAS.sendChatCard(teamSpaceId, card, `📝 Meeting summary: ${event.getTitle()}`);
+  } catch (e) {
+    GWAS.gwasLog('MeetingNotes', 'WARN', `Meeting summary Chat card failed: ${(e as Error).message}`);
+  }
 }
 
 // ─── Summary email ────────────────────────────────────────────────────────────
@@ -429,12 +438,16 @@ function _dispatchUrgentAlerts(alerts: string[], event: GoogleAppsScript.Calenda
   if (!member) return;
 
   alerts.forEach(alert => {
-    GWAS.sendUrgentAlert({
-      member,
-      title: `Urgent item from "${event.getTitle()}"`,
-      message: alert,
-      alsoPostToTeamSpace: true,
-    });
+    try {
+      GWAS.sendUrgentAlert({
+        member,
+        title: `Urgent item from "${event.getTitle()}"`,
+        message: alert,
+        alsoPostToTeamSpace: true,
+      });
+    } catch (e) {
+      GWAS.gwasLog('MeetingNotes', 'WARN', `Urgent alert Chat card failed: ${(e as Error).message}`);
+    }
   });
 }
 
@@ -451,4 +464,76 @@ function _resolveOwnerEmail(nameOrEmail: string): string {
     nameOrEmail.toLowerCase().includes(m.name.toLowerCase().split(' ')[0])
   );
   return match?.email ?? '';
+}
+
+function _autoCreateTaskRecord(payload: any): void {
+  try {
+    const ssId = GWAS.getConfig('TASKS_SPREADSHEET_ID');
+    const sheet = SpreadsheetApp.openById(ssId).getSheetByName('Tasks');
+    if (!sheet) return;
+
+    const taskId = GWAS.generateId();
+    let apiId = '';
+
+    if (payload.owner) {
+      try {
+        const lists = Tasks.Tasklists!.list({ maxResults: 100 });
+        let listId = lists.items?.[0]?.id;
+        const gwasList = (lists.items || []).find(l => l.title === 'GWAS Tasks');
+        if (gwasList) listId = gwasList.id;
+        else {
+          const created = Tasks.Tasklists!.insert({ title: 'GWAS Tasks' });
+          listId = created.id;
+        }
+
+        const task: GoogleAppsScript.Tasks.Schema.Task = {
+          title: `[${taskId}] ${payload.title}`,
+          notes: payload.description,
+          status: 'needsAction',
+        };
+        if (payload.dueDate) task.due = new Date(payload.dueDate).toISOString();
+
+        const createdItem = Tasks.Tasks!.insert(task, listId as string);
+        apiId = createdItem.id || '';
+      } catch (e) {
+        GWAS.gwasLog('MeetingNotes', 'WARN', `Zero-Touch Google Tasks sync failed: ${(e as Error).message}`);
+      }
+    }
+
+    sheet.appendRow([
+      taskId,
+      payload.title,
+      payload.description || '',
+      payload.owner || '',
+      '', // projectId
+      'todo',
+      payload.priority || 'P2',
+      payload.dueDate || '',
+      new Date().toISOString(),
+      payload.source || 'macro',
+      payload.sourceRef || '',
+      apiId,
+      ''
+    ]);
+  } catch (e) {
+    GWAS.gwasLog('MeetingNotes', 'ERROR', `Zero-Touch Tasks Spreadsheet insertion failed: ${(e as Error).message}`);
+  }
+}
+
+function _autoCreateCalendarRecord(payload: any, organizer: string): void {
+  try {
+    if (!payload.suggestedDate) return;
+    const cal = CalendarApp.getDefaultCalendar();
+    const start = new Date(payload.suggestedDate);
+    // Give minimum 30 min duration
+    const duration = payload.suggestedDuration && payload.suggestedDuration > 0 ? payload.suggestedDuration : 30;
+    const end = new Date(start.getTime() + duration * 60000);
+    
+    cal.createEvent(payload.title || 'AI Suggested Meeting', start, end, {
+      description: payload.description || '',
+      guests: Array.isArray(payload.suggestedAttendees) ? payload.suggestedAttendees.join(',') : ''
+    });
+  } catch (e) {
+    GWAS.gwasLog('MeetingNotes', 'WARN', `Zero-Touch Calendar creation failed: ${(e as Error).message}`);
+  }
 }

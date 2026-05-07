@@ -72,7 +72,30 @@ function _processGmailThread(
 
   if (!body.trim()) return;
 
-  const fullText = `Subject: ${subject}\nFrom: ${sender}\n\n${body}`;
+  let fullText = `Subject: ${subject}\nFrom: ${sender}\n\n${body}`;
+
+  // Explicitly hunt for attached Google Docs (Drive links) in the plain and HTML body.
+  const htmlBody = latestMessage.getBody();
+  const docMatches = (latestMessage.getPlainBody() + ' ' + htmlBody).match(/https:\/\/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/g);
+  
+  if (docMatches) {
+    const docIds = [...new Set(docMatches.map(link => link.match(/d\/([a-zA-Z0-9_-]+)/)?.[1]).filter(Boolean))];
+    docIds.forEach(docId => {
+      try {
+        const docText = DocumentApp.openById(docId as string).getBody().getText();
+        fullText += `\n\n--- Content from Attached Google Doc ---\n${docText.substring(0, 15000)}`;
+      } catch (e) {
+        GWAS.gwasLog('MeetingNotes', 'WARN', `Could not read Google Doc attachment ${docId}: ${(e as Error).message}`);
+      }
+    });
+  }
+
+  // Also read physical text attachments if they exist.
+  latestMessage.getAttachments().forEach(att => {
+    if (att.getContentType() === 'text/plain') {
+      fullText += `\n\n--- Attachment: ${att.getName()} ---\n${att.getDataAsString().substring(0, 5000)}`;
+    }
+  });
 
   let extracted: GeminiExtractedContext;
   try {
@@ -96,36 +119,34 @@ function _processGmailThread(
       const callbackUrl = GWAS.getConfigOptional('APPROVAL_CALLBACK_URL') ?? '';
       const approvalId = GWAS.generateId();
 
-      const msgName = GWAS.sendApprovalCard({
-        member: approver,
-        approvalId,
-        actionType: 'CREATE_TASK',
-        title: `Task from email: ${item.title}`,
-        summary: item.description || item.sourceText,
-        details: [
-          { label: 'Email Subject', value: subject },
-          { label: 'From', value: sender },
-          { label: 'Priority', value: item.priority },
-          { label: 'Due Date', value: item.suggestedDueDate || 'Not specified' },
-        ],
-        callbackBaseUrl: callbackUrl,
-      });
+      let msgName = '';
+      try {
+        msgName = GWAS.sendApprovalCard({
+          member: approver,
+          approvalId,
+          actionType: 'CREATE_TASK',
+          title: `Task from email: ${item.title}`,
+          summary: item.description || item.sourceText,
+          details: [
+            { label: 'Email Subject', value: subject },
+            { label: 'From', value: sender },
+            { label: 'Priority', value: item.priority },
+            { label: 'Due Date', value: item.suggestedDueDate || 'Not specified' },
+          ],
+          callbackBaseUrl: callbackUrl,
+        });
+      } catch (e) {
+        GWAS.gwasLog('MeetingNotes', 'WARN', `Gmail Scanner Chat approval failed: ${(e as Error).message}`);
+      }
 
-      GWAS.createApproval({
-        actionType: 'CREATE_TASK',
-        payload: {
-          title: item.title,
-          description: item.description,
-          owner: ownerEmail,
-          priority: item.priority,
-          dueDate: item.suggestedDueDate,
-          source: 'email' as TaskSource,
-          sourceRef: threadUrl,
-        },
-        requestedBy: 'module-03-gmail-scanner',
-        assignedTo: ownerEmail,
-        chatSpaceId: approver.chatDmSpaceId,
-        chatMessageId: msgName,
+      _autoCreateTaskRecord({
+        title: item.title,
+        description: item.description,
+        owner: ownerEmail,
+        priority: item.priority,
+        dueDate: item.suggestedDueDate,
+        source: 'email',
+        sourceRef: threadUrl,
       });
     });
   }
@@ -157,29 +178,27 @@ function _processGmailThread(
         const callbackUrl = GWAS.getConfigOptional('APPROVAL_CALLBACK_URL') ?? '';
         const approvalId = GWAS.generateId();
 
-        const msgName = GWAS.sendApprovalCard({
-          member: approver,
-          approvalId,
-          actionType: 'CREATE_CALENDAR_EVENT',
-          title: `Schedule: ${suggestion.title}`,
-          summary: suggestion.description || 'Suggested from email.',
-          details: [
-            { label: 'Email', value: subject },
-            { label: 'Suggested Date', value: suggestion.suggestedDate || 'Not specified' },
-            { label: 'Duration', value: `${suggestion.suggestedDuration} min` },
-            { label: 'Attendees', value: suggestion.suggestedAttendees.join(', ') || 'TBD' },
-          ],
-          callbackBaseUrl: callbackUrl,
-        });
+        let msgName = '';
+        try {
+          msgName = GWAS.sendApprovalCard({
+            member: approver,
+            approvalId,
+            actionType: 'CREATE_CALENDAR_EVENT',
+            title: `Schedule: ${suggestion.title}`,
+            summary: suggestion.description || 'Suggested from email.',
+            details: [
+              { label: 'Email', value: subject },
+              { label: 'Suggested Date', value: suggestion.suggestedDate || 'Not specified' },
+              { label: 'Duration', value: `${suggestion.suggestedDuration} min` },
+              { label: 'Attendees', value: suggestion.suggestedAttendees.join(', ') || 'TBD' },
+            ],
+            callbackBaseUrl: callbackUrl,
+          });
+        } catch (e) {
+          GWAS.gwasLog('MeetingNotes', 'WARN', `Gmail Scanner Chat calendar approval failed: ${(e as Error).message}`);
+        }
 
-        GWAS.createApproval({
-          actionType: 'CREATE_CALENDAR_EVENT',
-          payload: suggestion,
-          requestedBy: 'module-03-gmail-scanner',
-          assignedTo: currentUser,
-          chatSpaceId: approver.chatDmSpaceId,
-          chatMessageId: msgName,
-        });
+        _autoCreateCalendarRecord(suggestion, currentUser);
       });
     }
   }

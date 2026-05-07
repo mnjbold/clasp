@@ -193,11 +193,38 @@ function _setupPreMeetingDoc(event: GoogleAppsScript.Calendar.CalendarEvent): vo
   event.setDescription(updatedDesc);
 
   // Notify attendees via Chat.
-  const teamSpaceId = GWAS.getConfig('TEAM_CHAT_SPACE_ID');
-  GWAS.sendChatMessage(
-    teamSpaceId,
-    `📝 Meeting notes doc ready for *${title}* (starting ${event.getStartTime().toLocaleTimeString()}):\n${doc.getUrl()}`
-  );
+  try {
+    const teamSpaceId = GWAS.getConfig('TEAM_CHAT_SPACE_ID');
+    GWAS.sendChatMessage(
+      teamSpaceId,
+      `📝 Meeting notes doc ready for *${title}* (starting ${event.getStartTime().toLocaleTimeString()}):\n${doc.getUrl()}`
+    );
+  } catch (e) {
+    GWAS.gwasLog('Calendar', 'WARN', `Pre-meeting Chat notification failed for "${title}": ${(e as Error).message}`);
+  }
+
+  // Notify attendees via Email.
+  try {
+    const htmlBody = GWAS.wrapHtmlEmail(
+      `📝 Meeting Notes Ready: ${title}`,
+      `<p>The meeting notes document for <strong>${title}</strong> is ready.</p>
+      <p><strong>Time:</strong> ${event.getStartTime().toLocaleString()} – ${event.getEndTime().toLocaleString()}</p>
+      <p><a href="${doc.getUrl()}">📄 Open Meeting Notes →</a></p>
+      <div class="section">
+        <h3>Agenda</h3>
+        <p>${(eventDesc || 'No agenda provided in calendar event.').replace(/\n/g, '<br>')}</p>
+      </div>`
+    );
+
+    GWAS.sendEmail({
+      to: guests.join(','),
+      subject: `📝 Meeting Prep: ${title} — ${event.getStartTime().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      body: `Meeting notes doc ready for ${title}: ${doc.getUrl()}`,
+      htmlBody,
+    });
+  } catch (e) {
+    GWAS.gwasLog('Calendar', 'ERROR', `Pre-meeting Email notification failed for "${title}": ${(e as Error).message}`);
+  }
 
   GWAS.gwasLog('Calendar', 'INFO', `Pre-meeting doc created for "${title}": ${doc.getUrl()}`);
 }

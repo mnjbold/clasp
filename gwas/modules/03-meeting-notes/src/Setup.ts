@@ -15,7 +15,7 @@ function setupMeetingNotes(): void {
 
   // Every 60 min — scan monitored Chat spaces for action items.
   ScriptApp.newTrigger('scanChatForContext')
-    .timeBased().everyMinutes(60).create();
+    .timeBased().everyHours(1).create();
 
   // Daily 6 AM — index yesterday's meeting notes into KB.
   ScriptApp.newTrigger('indexYesterdaysMeetingNotes')

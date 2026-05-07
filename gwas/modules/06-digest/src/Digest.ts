@@ -170,7 +170,11 @@ Be direct and actionable. One sentence only.`;
     }],
   });
 
-  GWAS.sendDigestCard(member, 'am', sections);
+  try {
+    GWAS.sendDigestCard(member, 'am', sections);
+  } catch (e) {
+    GWAS.gwasLog('Digest', 'WARN', `AM Chat digest failed for ${member.email}: ${(e as Error).message}`);
+  }
 
   // Email.
   const htmlBody = GWAS.wrapHtmlEmail(
@@ -299,7 +303,11 @@ Be encouraging and forward-looking. One sentence only.`;
     });
   }
 
-  GWAS.sendDigestCard(member, 'pm', sections);
+  try {
+    GWAS.sendDigestCard(member, 'pm', sections);
+  } catch (e) {
+    GWAS.gwasLog('Digest', 'WARN', `PM Chat digest failed for ${member.email}: ${(e as Error).message}`);
+  }
 
   const htmlBody = GWAS.wrapHtmlEmail(
     `🌙 End of day, ${member.name.split(' ')[0]}`,
@@ -390,7 +398,11 @@ Be factual and motivating. Prose only, no bullet points.`;
     ],
   };
 
-  GWAS.sendChatCard(teamSpaceId, card, `📊 Weekly digest: ${completedCount} tasks completed`);
+  try {
+    GWAS.sendChatCard(teamSpaceId, card, `📊 Weekly digest: ${completedCount} tasks completed`);
+  } catch (e) {
+    GWAS.gwasLog('Digest', 'WARN', `Weekly Chat digest failed: ${(e as Error).message}`);
+  }
 
   // Email all team members.
   const members = GWAS.getTeamMembers();
